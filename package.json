@@ -1,0 +1,31 @@
+{
+  "name": "gulp-once",
+  "version": "1.0.0",
+  "description": "Only pass through files once until changed",
+  "repository": "corneliusio/gulp-once",
+  "bugs": {
+    "url" : "https://github.com/corneliusio/gulp-once/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Cornelius Ukena",
+    "email": "guy@cornelius.io"
+  },
+  "keywords": [
+    "gulpplugin",
+    "passthrough",
+    "cache",
+    "cached",
+    "changed",
+    "newer",
+    "updated",
+    "modified",
+    "checksum",
+    "filter",
+    "persistant"
+  ],
+  "license": "MIT"
+}

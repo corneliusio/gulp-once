@@ -1,7 +1,7 @@
 # gulp-once
 Only pass through files once unless changed
 
-Similar to plugins such as [gulp-cache](https://www.npmjs.com/package/gulp-cache), [gulp-changed](https://www.npmjs.com/package/gulp-changed), and [gulp-newer](https://www.npmjs.com/package/gulp-newer), except it doesn't care about your dest/build files (incase you don't source control your compiled/built files) and it will still persist your "cache" (unless you don't want it to) across Gulp runs. Also makes it easy to manage what files are filtered since data is stored in a easily readable JSON file.
+Similar to plugins such as [gulp-cache](https://www.npmjs.com/package/gulp-cache), [gulp-changed](https://www.npmjs.com/package/gulp-changed), and [gulp-newer](https://www.npmjs.com/package/gulp-newer), except it doesn't care about your dest/build files and it will still persist your "cache" (unless you don't want it to) across Gulp runs. Also makes it easy to manage what files are filtered since data is stored in a easily readable JSON file.
 
 ## Install
 

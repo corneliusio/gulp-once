@@ -1,12 +1,13 @@
-var fs = require('fs'),
+let fs = require('fs'),
     path = require('path'),
     crypto = require('crypto'),
     Stream = require('stream'),
+    gutil = require('gulp-util'),
     oncechecksums = {};
 
-module.exports = function(options) {
+module.exports = function(options = {}) {
 
-    var stream = new Stream.Transform({objectMode: true}),
+    let stream = new Stream.Transform({objectMode: true}),
         settings = {
             namespace: false,
             algorithm: 'sha1',
@@ -16,19 +17,27 @@ module.exports = function(options) {
 
     options = (typeof options === 'string') ? {namespace: options} : options;
 
-    for (var key in options) {
-        settings[key] = options[key];
+    for (let key in options) {
+        if (options.hasOwnProperty(key)) {
+            settings[key] = options[key];
+        }
     }
 
     if (settings.file) {
 
+        if (!fs.existsSync(settings.file)) {
+            fs.writeFileSync(settings.file, JSON.stringify({}, null, settings.fileIndent));
+        }
+
         try {
-            var content = fs.readFileSync(settings.file, 'utf8');
+            let content = fs.readFileSync(settings.file, 'utf8');
+
             if (content) {
                 oncechecksums = JSON.parse(content);
             }
         } catch (e) {
             // go on about our business
+            console.log(e);
         }
     }
 
@@ -37,16 +46,10 @@ module.exports = function(options) {
     }
 
     stream._transform = function(file, encoding, next) {
-        var flow = this;
-
-        if (file.isStream()) {
-            flow.push(file);
-            return next();
-        }
 
         if (file.isBuffer()) {
 
-            var filename = path.basename(file.path),
+            let filename = path.basename(file.path),
                 filechecksum = crypto
                     .createHash(settings.algorithm || 'sha1')
                     .update(file.contents.toString('utf8'))
@@ -69,16 +72,15 @@ module.exports = function(options) {
             }
 
             if (settings.file) {
-                fs.writeFile(settings.file, JSON.stringify(oncechecksums, null, settings.fileIndent), function(error) {
+                fs.writeFile(settings.file, JSON.stringify(oncechecksums, null, settings.fileIndent), error => {
                     if (error) {
-                        flow.emit('error', error).bind(flow);
+                        return next(new gutil.PluginError('gulp-once', error, {showStack: true}));
                     }
                 });
             }
-        }
 
-        flow.push(file);
-        return next();
+            return next(null, file);
+        }
     };
 
     return stream;

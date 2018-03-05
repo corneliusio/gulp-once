@@ -1,14 +1,15 @@
 let fs = require('fs'),
     path = require('path'),
     crypto = require('crypto'),
-    Stream = require('stream'),
-    gutil = require('gulp-util'),
+    {Transform} = require('stream'),
+    PluginError = require('plugin-error'),
     oncechecksums = {};
 
 module.exports = function(options = {}) {
 
-    let stream = new Stream.Transform({objectMode: true}),
+    let stream = new Transform({objectMode: true}),
         settings = {
+            context: false,
             namespace: false,
             algorithm: 'sha1',
             file: '.checksums',
@@ -49,11 +50,11 @@ module.exports = function(options = {}) {
 
         if (file.isBuffer()) {
 
-            let filename = path.basename(file.path),
-                filechecksum = crypto
-                    .createHash(settings.algorithm || 'sha1')
-                    .update(file.contents.toString('utf8'))
-                    .digest('hex');
+            const filename = settings.context ? path.relative(settings.context, file.path) : path.basename(file.path);
+            const filechecksum = crypto
+                .createHash(settings.algorithm || 'sha1')
+                .update(file.contents.toString('utf8'))
+                .digest('hex');
 
             if (settings.namespace in oncechecksums) {
 
@@ -74,7 +75,7 @@ module.exports = function(options = {}) {
             if (settings.file) {
                 fs.writeFile(settings.file, JSON.stringify(oncechecksums, null, settings.fileIndent), error => {
                     if (error) {
-                        return next(new gutil.PluginError('gulp-once', error, {showStack: true}));
+                        return next(new PluginError('gulp-once', error, {showStack: true}));
                     }
                 });
             }

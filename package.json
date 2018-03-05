@@ -31,5 +31,8 @@
     "filter",
     "persistant"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "plugin-error": "^1.0.1"
+  }
 }

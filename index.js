@@ -80,7 +80,9 @@ module.exports = function(options = {}) {
                 });
             }
 
-            return next(null, file);
+            stream.push(file);
+
+            return next();
         }
     };
 

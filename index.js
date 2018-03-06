@@ -5,18 +5,19 @@ let fs = require('fs'),
     PluginError = require('plugin-error'),
     oncechecksums = {};
 
-module.exports = function(options = {}) {
+module.exports = (options = {}) => {
 
-    let stream = new Transform({objectMode: true}),
+    let empty = process.env.NODE_ENV === 'test' ? '' : null,
+        stream = new Transform({objectMode: true}),
         settings = {
-            context: false,
+            context: process.cwd(),
             namespace: false,
             algorithm: 'sha1',
             file: '.checksums',
             fileIndent: 4
         };
 
-    options = (typeof options === 'string') ? {namespace: options} : options;
+    options = (typeof options !== 'object') ? {namespace: options} : options;
 
     for (let key in options) {
         if (options.hasOwnProperty(key)) {
@@ -27,7 +28,7 @@ module.exports = function(options = {}) {
     if (settings.file) {
 
         if (!fs.existsSync(settings.file)) {
-            fs.writeFileSync(settings.file, JSON.stringify({}, null, settings.fileIndent));
+            fs.writeFileSync(settings.file, JSON.stringify({}));
         }
 
         try {
@@ -42,17 +43,28 @@ module.exports = function(options = {}) {
         }
     }
 
-    if (!!settings.namespace && !oncechecksums[settings.namespace]) {
-        oncechecksums[settings.namespace] = {};
-    }
+    stream._transform = (file, encoding, next) => {
 
-    stream._transform = function(file, encoding, next) {
+        if (file.isStream()) {
+            return next(new PluginError('gulp-once', 'Streams are not supported!'));
+        }
 
         if (file.isStream()) {
             return next(new PluginError('gulp-once', 'Streams are not supported!'));
         }
 
         if (file.isBuffer()) {
+
+            if (!!settings.namespace) {
+
+                if (typeof settings.namespace === 'function') {
+                    settings.namespace = settings.namespace(file.clone());
+                }
+
+                if (!oncechecksums[settings.namespace]) {
+                    oncechecksums[settings.namespace] = {};
+                }
+            }
 
             const filename = settings.context ? path.relative(settings.context, file.path) : path.basename(file.path);
             const filechecksum = crypto
@@ -63,21 +75,21 @@ module.exports = function(options = {}) {
             if (settings.namespace in oncechecksums) {
 
                 if (oncechecksums[settings.namespace][filename] === filechecksum) {
-                    return next();
+                    return next(null, empty);
                 }
 
                 oncechecksums[settings.namespace][filename] = filechecksum;
             } else {
 
                 if (oncechecksums[filename] === filechecksum) {
-                    return next();
+                    return next(null, empty);
                 }
 
                 oncechecksums[filename] = filechecksum;
             }
 
             if (settings.file) {
-                fs.writeFile(settings.file, JSON.stringify(oncechecksums, null, settings.fileIndent), error => {
+                fs.writeFileSync(settings.file, JSON.stringify(oncechecksums, null, settings.fileIndent), error => {
                     if (error) {
                         return next(new PluginError('gulp-once', error, {showStack: true}));
                     }

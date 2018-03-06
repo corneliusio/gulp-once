@@ -11,7 +11,7 @@
     "node": ">=6.0.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ava --verbose"
   },
   "author": {
     "name": "Cornelius Ukena",
@@ -34,5 +34,9 @@
   "license": "MIT",
   "dependencies": {
     "plugin-error": "^1.0.1"
+  },
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "vinyl": "^2.1.0"
   }
 }

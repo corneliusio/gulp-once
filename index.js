@@ -89,11 +89,11 @@ module.exports = (options = {}) => {
             }
 
             if (settings.file) {
-                fs.writeFileSync(settings.file, JSON.stringify(oncechecksums, null, settings.fileIndent), error => {
-                    if (error) {
-                        return next(new PluginError('gulp-once', error, {showStack: true}));
-                    }
-                });
+                try {
+                    fs.writeFileSync(settings.file, JSON.stringify(oncechecksums, null, settings.fileIndent));
+                } catch (e) {
+                    return next(new PluginError('gulp-once', e, {showStack: true}));
+                }
             }
         }
 

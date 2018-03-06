@@ -48,6 +48,10 @@ module.exports = function(options = {}) {
 
     stream._transform = function(file, encoding, next) {
 
+        if (file.isStream()) {
+            return next(new PluginError('gulp-once', 'Streams are not supported!'));
+        }
+
         if (file.isBuffer()) {
 
             const filename = settings.context ? path.relative(settings.context, file.path) : path.basename(file.path);
@@ -79,11 +83,9 @@ module.exports = function(options = {}) {
                     }
                 });
             }
-
-            stream.push(file);
-
-            return next();
         }
+
+        next(null, file);
     };
 
     return stream;

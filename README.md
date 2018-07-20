@@ -72,7 +72,7 @@ If you do not pass an object as an option to `once()`, it will be passed to this
 *[string]*: Whatever you would want passed to [`crypto.createHash()`](https://nodejs.org/api/crypto.html#crypto_crypto_createhash_algorithm) Default: `'sha1'`
 
 #### `options.file`
-*[string|boolean]*: Path to file to persist data as JSON between Gulp runs. Is useful for retaining file details if Gulp exits unexpectedly and you have to restart, if you fun tasks manually (i.e. You don't `gulp.watch()` files), or to just not run unnecessary actions between work sessions. Also allows you to easily "cache bust" for specific files easily if you are so inclined. Can be set to `false` to store data in memory, this effectively turns off persistance as a file will not be created/updated with any file changes. Default: `'.checksums'`
+*[string|boolean]*: Path to file to persist data as JSON between Gulp runs. Is useful for retaining file details if Gulp exits unexpectedly and you have to restart, if you run tasks manually (i.e. You don't `gulp.watch()` files), or to just not run unnecessary actions between work sessions. Also allows you to easily "cache bust" for specific files easily if you are so inclined. Can be set to `false` to store data in memory, this effectively turns off persistance as a file will not be created/updated with any file changes. Default: `'.checksums'`
 
 ```js
     gulp.src('src/img/*')

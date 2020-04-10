@@ -1,6 +1,6 @@
 {
   "name": "gulp-once",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Only pass through files once until changed",
   "repository": "corneliusio/gulp-once",
   "bugs": {

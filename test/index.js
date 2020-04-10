@@ -1,13 +1,12 @@
-let fs = require('fs'),
-    test = require('ava'),
-    path = require('path'),
-    File = require('vinyl'),
-    once = require('../');
+const fs = require('fs');
+const test = require('ava');
+const path = require('path');
+const File = require('vinyl');
+const once = require('../');
 
 test('adds new files to checksum list', t => new Promise(done => {
-
     const checksums = path.resolve(__dirname, '.c1');
-    const stream = once({file: checksums});
+    const stream = once({ file: checksums });
     const file = new File({
         path: 'path/to/file.txt',
         contents: Buffer.from('Hello, world.')
@@ -35,7 +34,7 @@ test('adds new files to checksum list', t => new Promise(done => {
 test('filters out unchanged files', t => new Promise(done => {
 
     const checksums = path.resolve(__dirname, '.c2');
-    const stream = once({file: checksums});
+    const stream = once({ file: checksums });
     const file = new File({
         path: 'path/to/file.txt',
         contents: Buffer.from('Hello, world.')
@@ -58,9 +57,8 @@ test('filters out unchanged files', t => new Promise(done => {
 }));
 
 test('allows changed files through', t => new Promise(done => {
-
     const checksums = path.resolve(__dirname, '.c3');
-    const stream = once({file: checksums});
+    const stream = once({ file: checksums });
     const file = new File({
         path: 'path/to/file.txt',
         contents: Buffer.from('Hello, world.')
@@ -86,12 +84,13 @@ test('allows changed files through', t => new Promise(done => {
 }));
 
 test('can disable context', t => new Promise(done => {
-
     const checksums = path.resolve(__dirname, '.c4');
+
     const stream = once({
         context: false,
         file: checksums
     });
+
     const file = new File({
         path: 'path/to/file.txt',
         contents: Buffer.from('Hello, world.')
@@ -114,12 +113,13 @@ test('can disable context', t => new Promise(done => {
 }));
 
 test('can set namespace for files', t => new Promise(done => {
-
     const checksums = path.resolve(__dirname, '.c5');
+
     const stream = once({
         namespace: 'foobar',
         file: checksums
     });
+
     const file = new File({
         path: 'path/to/file.txt',
         contents: Buffer.from('Hello, world.')
@@ -143,14 +143,15 @@ test('can set namespace for files', t => new Promise(done => {
 }));
 
 test('can set dynamic namespaces with function', t => new Promise(done => {
-
     const checksums = path.resolve(__dirname, '.c6');
+
     const stream = once({
         namespace(file) {
             return path.extname(file.path).replace(/^\./, '');
         },
         file: checksums
     });
+
     const file = new File({
         path: 'path/to/file.txt',
         contents: Buffer.from('Hello, world.')
@@ -174,12 +175,13 @@ test('can set dynamic namespaces with function', t => new Promise(done => {
 }));
 
 test('can set alternate hashing algorithm', t => new Promise(done => {
-
     const checksums = path.resolve(__dirname, '.c7');
+
     const stream = once({
         algorithm: 'sha256',
         file: checksums
     });
+
     const file = new File({
         path: 'path/to/file.txt',
         contents: Buffer.from('Hello, world.')
@@ -202,13 +204,12 @@ test('can set alternate hashing algorithm', t => new Promise(done => {
 }));
 
 test('stress test', t => new Promise(done => {
-
     let finished = 0;
     const checksums = path.resolve(__dirname, '.c8');
 
     for (let is = 0, ls = 20; is < ls; is++) {
         let filtered = 0;
-        const stream = once({file: checksums});
+        const stream = once({ file: checksums });
 
         stream.on('data', data => {
             filtered++;

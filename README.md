@@ -56,7 +56,7 @@ gulp.task('default', function() {
 ```
 
 #### `options.namespace`
-*[string|function|boolean]*: If you want to separate pools/namespaces of hashes for different tasks within the same checksums 
+*[string|function|boolean]*: If you want to separate pools/namespaces of hashes for different tasks within the same checksums
 file, you can assign a namespace for a specific stream. You can also provide a function that dynamically sets the namespace per file—this function will be passed a copy of the file vinyl file object being checked. Default: `false`
 
 If you do not pass an object as an option to `once()`, it will be passed to this setting.
@@ -84,3 +84,60 @@ If you do not pass an object as an option to `once()`, it will be passed to this
 #### `options.fileIndent`
 *[int]*: If you're a stickler for spacing on your files, you can set the indentation for the checksumed files. Has no effect if `options.file`
 is set to `false`. Default: `4`
+
+---
+
+## gulp-once/clear
+
+Used to clear entire cache file or a namespace within a cache file.
+
+### Usage
+
+```js
+onceclear({
+    namespace: false,
+    delete: false, // false = empties entry/file, true = deletes entry/file
+    file: '.checksums',
+    fileIndent: 4
+});
+```
+
+#### `options.namespace`
+
+Same as [`options.namespace`](#optionsnamespace) above.
+
+#### `options.delete`
+*[boolean]*: If enabled, will delete a namespace entry out of a checksum file or will delete the checksum file. By default will only empty a namespace within a checksum file (`"namespace": {}`) or set a checksum file's content to `{}`. Leave this set to false if you want to preserve the order of namespaces as they were originally written. Default: `false`
+
+#### `options.file`
+
+Same as [`options.file`](#optionsfile) above.
+
+#### `options.fileIndent`
+
+Same as [`options.fileIndent`](#optionsfileindent) above.
+
+### Example
+
+```js
+var onceclear = require( 'gulp-once/clear' );
+
+function clearcache(done, name) { // name is a string, i.e. 'cache name'
+    if (name === undefined) {
+        onceclear( { fileIndent: 2 } );
+    } else {
+        onceclear({
+            namespace: name,
+            fileIndent: 2
+        });
+    }
+
+    done();
+};
+
+task( "clearcache", clearcache );
+
+task( "clearcache_css",  function ( done ) { clearcache( done, 'css' ); } );
+task( "clearcache_js",   function ( done ) { clearcache( done, 'js' ); } );
+task( "clearcache_html", function ( done ) { clearcache( done, 'html' ); } );
+```

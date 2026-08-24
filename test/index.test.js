@@ -229,22 +229,48 @@ test('instances do not share state', async () => {
     assert.equal(outputB.length, 1, 'second cache has never seen the file');
 });
 
+test('instances sharing a checksum file merge their writes', async () => {
+    const checksums = checksumFile('c-shared');
+
+    const styles = once({ namespace: 'styles', file: checksums });
+    const scripts = once({ namespace: 'scripts', file: checksums });
+
+    await Promise.all([
+        run(styles, [makeFile('path/to/style.css', 'a { color: red; }')]),
+        run(scripts, [makeFile('path/to/script.js', 'console.log(1);')])
+    ]);
+
+    const content = JSON.parse(fs.readFileSync(checksums, 'utf8'));
+
+    assert.ok(content.styles['path/to/style.css'], 'first namespace persisted');
+    assert.ok(content.scripts['path/to/script.js'], 'second namespace persisted');
+});
+
 test('stress test', async () => {
     const checksums = checksumFile('c8');
     const streams = [];
+    const pending = [];
 
+    // construct every stream up front so they all share one cache file
     for (let is = 0; is < 20; is++) {
-        const stream = once({ file: checksums });
+        streams.push(once({ file: checksums }));
+    }
+
+    streams.forEach((stream, is) => {
         const files = [];
 
         for (let i = 0; i < 200; i++) {
             files.push(makeFile(`path/to/file-${is}-${i}.txt`, 'Hello, world.'));
         }
 
-        streams.push(run(stream, files));
-    }
+        pending.push(run(stream, files));
+    });
 
-    const results = await Promise.all(streams);
+    const results = await Promise.all(pending);
 
     results.forEach((output) => assert.equal(output.length, 200));
+
+    const content = JSON.parse(fs.readFileSync(checksums, 'utf8'));
+
+    assert.equal(Object.keys(content).length, 4000, 'every checksum survived in the shared file');
 });

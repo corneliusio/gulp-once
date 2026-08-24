@@ -15,8 +15,23 @@ permissions:
   id-token: write
 
 jobs:
+  # the published runtime must still work on the oldest supported Node
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [8, 12]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install --production
+      - run: node test/smoke.js
+
   publish:
     runs-on: ubuntu-latest
+    needs: smoke
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4

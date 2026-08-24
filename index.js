@@ -6,6 +6,14 @@ const PluginError = require('plugin-error');
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 
+// In-memory cache state shared by instances pointed at the same checksum
+// file, so parallel tasks writing to one file merge instead of clobbering.
+const caches = new Map();
+
+// v2.1 caches written on Windows used backslash keys; keys are now
+// slash-normalized on every platform.
+const migrateKey = (key) => (path.sep === '\\' ? key.split('\\').join('/') : key);
+
 // Copy parsed JSON into null-prototype records so keys like "__proto__" are
 // plain data properties and can never reach Object.prototype.
 const sanitize = (parsed) => {
@@ -16,15 +24,17 @@ const sanitize = (parsed) => {
             const value = parsed[key];
 
             if (typeof value === 'string') {
-                cache[key] = value;
+                cache[migrateKey(key)] = value;
             } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-                cache[key] = Object.create(null);
+                const bucket = Object.create(null);
 
                 Object.keys(value).forEach((nested) => {
                     if (typeof value[nested] === 'string') {
-                        cache[key][nested] = value[nested];
+                        bucket[migrateKey(nested)] = value[nested];
                     }
                 });
+
+                cache[key] = bucket;
             }
         });
     }
@@ -61,19 +71,27 @@ module.exports = (options = {}) => {
     };
 
     if (settings.file) {
-        try {
-            if (fs.existsSync(settings.file)) {
-                const content = fs.readFileSync(settings.file, 'utf8');
+        const cachekey = path.resolve(settings.file);
 
-                if (content) {
-                    checksums = sanitize(JSON.parse(content));
+        if (caches.has(cachekey)) {
+            checksums = caches.get(cachekey);
+        } else {
+            try {
+                if (fs.existsSync(settings.file)) {
+                    const content = fs.readFileSync(settings.file, 'utf8');
+
+                    if (content) {
+                        checksums = sanitize(JSON.parse(content));
+                    }
+                } else {
+                    persist();
                 }
-            } else {
-                persist();
+            } catch (e) {
+                // unreadable or malformed cache; start fresh
+                console.log(e);
             }
-        } catch (e) {
-            // unreadable or malformed cache; start fresh
-            console.log(e);
+
+            caches.set(cachekey, checksums);
         }
     }
 

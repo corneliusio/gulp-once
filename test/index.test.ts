@@ -373,22 +373,22 @@ test('filters files in a real gulp pipeline', async () => {
     const glob = `${srcdir.split(path.sep).join('/')}/*.txt`
 
     const runPipeline = async () => {
-        let count = 0
+        const emitted: string[] = []
         const filter = once({ file: checksums, context: srcdir })
 
-        filter.on('data', () => count++)
+        filter.on('data', (file: File) => emitted.push(path.basename(file.path)))
 
         await finished(gulp.src(glob).pipe(filter).pipe(gulp.dest(destdir)))
 
-        return count
+        return emitted.sort()
     }
 
-    assert.equal(await runPipeline(), 2, 'first run passes every file')
-    assert.equal(await runPipeline(), 0, 'second run filters everything')
+    assert.deepEqual(await runPipeline(), ['a.txt', 'b.txt'], 'first run passes every file')
+    assert.deepEqual(await runPipeline(), [], 'second run filters everything')
 
     fs.writeFileSync(path.join(srcdir, 'b.txt'), 'beta changed')
 
-    assert.equal(await runPipeline(), 1, 'only the changed file passes')
+    assert.deepEqual(await runPipeline(), ['b.txt'], 'only the changed file passes')
     assert.ok(fs.existsSync(path.join(destdir, 'a.txt')), 'files reached gulp.dest')
 })
 
@@ -414,6 +414,7 @@ test('passes null-content files through untouched', async () => {
     const output = await run(once({ file: checksums }), [file])
 
     assert.equal(output.length, 1)
+    assert.equal(output[0], file, 'the same file object is passed through')
     assert.deepEqual(readCache(checksums), {}, 'nothing is recorded for null contents')
 })
 

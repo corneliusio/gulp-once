@@ -4,88 +4,124 @@ const crypto = require('crypto');
 const { Transform } = require('stream');
 const PluginError = require('plugin-error');
 
-let oncechecksums = {};
+const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+
+// Copy parsed JSON into null-prototype records so keys like "__proto__" are
+// plain data properties and can never reach Object.prototype.
+const sanitize = (parsed) => {
+    const cache = Object.create(null);
+
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        Object.keys(parsed).forEach((key) => {
+            const value = parsed[key];
+
+            if (typeof value === 'string') {
+                cache[key] = value;
+            } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+                cache[key] = Object.create(null);
+
+                Object.keys(value).forEach((nested) => {
+                    if (typeof value[nested] === 'string') {
+                        cache[key][nested] = value[nested];
+                    }
+                });
+            }
+        });
+    }
+
+    return cache;
+};
 
 module.exports = (options = {}) => {
-    let empty = process.env.NODE_ENV === 'test' ? '' : null,
-        stream = new Transform({ objectMode: true }),
-        settings = {
-            context: process.cwd(),
-            namespace: false,
-            algorithm: 'sha1',
-            file: '.checksums',
-            fileIndent: 4
-        };
+    let checksums = Object.create(null);
 
-    options = (typeof options !== 'object') ? { namespace: options } : options;
+    const stream = new Transform({ objectMode: true });
+    const settings = Object.assign(Object.create(null), {
+        context: process.cwd(),
+        namespace: false,
+        algorithm: 'sha1',
+        file: '.checksums',
+        fileIndent: 4
+    });
 
-    for (let key in options) {
-        if (options.hasOwnProperty(key)) {
+    options = (!options || typeof options !== 'object') ? { namespace: options } : options;
+
+    for (const key in options) {
+        if (hasOwn(options, key)) {
             settings[key] = options[key];
         }
     }
 
+    // Write to a temp file, then rename so a crash can't leave truncated JSON.
+    const persist = () => {
+        const temp = `${settings.file}.${process.pid}.tmp`;
+
+        fs.writeFileSync(temp, JSON.stringify(checksums, null, settings.fileIndent));
+        fs.renameSync(temp, settings.file);
+    };
+
     if (settings.file) {
-        if (!fs.existsSync(settings.file)) {
-            fs.writeFileSync(settings.file, JSON.stringify({}));
-        }
-
         try {
-            let content = fs.readFileSync(settings.file, 'utf8');
+            if (fs.existsSync(settings.file)) {
+                const content = fs.readFileSync(settings.file, 'utf8');
 
-            if (content) {
-                oncechecksums = JSON.parse(content);
+                if (content) {
+                    checksums = sanitize(JSON.parse(content));
+                }
+            } else {
+                persist();
             }
         } catch (e) {
-            // go on about our business
+            // unreadable or malformed cache; start fresh
             console.log(e);
         }
     }
 
-    // eslint-disable-next-line complexity
     stream._transform = (file, encoding, next) => {
         if (file.isStream()) {
             return next(new PluginError('gulp-once', 'Streams are not supported!'));
         }
 
-        if (file.isStream()) {
-            return next(new PluginError('gulp-once', 'Streams are not supported!'));
-        }
-
         if (file.isBuffer()) {
-            if (!!settings.namespace) {
-                if (typeof settings.namespace === 'function') {
-                    settings.namespace = settings.namespace(file.clone());
+            let bucket = checksums;
+            let filechecksum;
+
+            try {
+                let namespace = settings.namespace;
+
+                if (typeof namespace === 'function') {
+                    namespace = namespace(file.clone());
                 }
 
-                if (!oncechecksums[settings.namespace]) {
-                    oncechecksums[settings.namespace] = {};
+                if (namespace) {
+                    if (!hasOwn(checksums, namespace) || typeof checksums[namespace] !== 'object') {
+                        checksums[namespace] = Object.create(null);
+                    }
+
+                    bucket = checksums[namespace];
                 }
+
+                filechecksum = crypto
+                    .createHash(settings.algorithm || 'sha1')
+                    .update(file.contents)
+                    .digest('hex');
+            } catch (e) {
+                return next(new PluginError('gulp-once', e, { showStack: true }));
             }
 
-            const filename = settings.context ? path.relative(settings.context, file.path) : path.basename(file.path);
-            const filechecksum = crypto
-                .createHash(settings.algorithm || 'sha1')
-                .update(file.contents.toString('utf8'))
-                .digest('hex');
+            const filename = (settings.context
+                ? path.relative(settings.context, file.path)
+                : path.basename(file.path)).split(path.sep).join('/');
 
-            if (settings.namespace in oncechecksums) {
-                if (oncechecksums[settings.namespace][filename] === filechecksum) {
-                    return next(null, empty);
-                }
-
-                oncechecksums[settings.namespace][filename] = filechecksum;
-            } else {
-                if (oncechecksums[filename] === filechecksum) {
-                    return next(null, empty);
-                }
-
-                oncechecksums[filename] = filechecksum;
+            if (bucket[filename] === filechecksum) {
+                return next();
             }
+
+            bucket[filename] = filechecksum;
 
             if (settings.file) {
                 try {
-                    fs.writeFileSync(settings.file, JSON.stringify(oncechecksums, null, settings.fileIndent));
+                    persist();
                 } catch (e) {
                     return next(new PluginError('gulp-once', e, { showStack: true }));
                 }

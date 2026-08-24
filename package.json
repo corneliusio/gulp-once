@@ -2,16 +2,24 @@
   "name": "gulp-once",
   "version": "2.1.1",
   "description": "Only pass through files once until changed",
-  "repository": "corneliusio/gulp-once",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/corneliusio/gulp-once.git"
+  },
   "bugs": {
     "url": "https://github.com/corneliusio/gulp-once/issues"
   },
   "main": "index.js",
+  "files": [
+    "index.js"
+  ],
   "engines": {
     "node": ">=8.0.0"
   },
+  "packageManager": "pnpm@11.20.0",
   "scripts": {
-    "test": "ava --verbose"
+    "test": "node --test test/*.test.js",
+    "test:smoke": "node test/smoke.js"
   },
   "author": {
     "name": "Cornelius Ukena",
@@ -29,14 +37,13 @@
     "modified",
     "checksum",
     "filter",
-    "persistant"
+    "persistent"
   ],
   "license": "MIT",
   "dependencies": {
     "plugin-error": "^1.0.1"
   },
   "devDependencies": {
-    "ava": "^0.25.0",
-    "vinyl": "^2.1.0"
+    "vinyl": "^3.0.1"
   }
 }

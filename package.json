@@ -1,50 +1,64 @@
 {
-  "name": "gulp-once",
-  "version": "2.2.0",
-  "description": "Only pass through files once until changed",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/corneliusio/gulp-once.git"
-  },
-  "bugs": {
-    "url": "https://github.com/corneliusio/gulp-once/issues"
-  },
-  "main": "index.js",
-  "files": [
-    "index.js"
-  ],
-  "engines": {
-    "node": ">=8.0.0"
-  },
-  "packageManager": "pnpm@11.20.0",
-  "scripts": {
-    "test": "node --test test/index.test.js",
-    "test:smoke": "node test/smoke.js"
-  },
-  "author": {
-    "name": "Cornelius Ukena",
-    "email": "guy@cornelius.io"
-  },
-  "keywords": [
-    "gulp",
-    "gulpplugin",
-    "passthrough",
-    "cache",
-    "cached",
-    "changed",
-    "newer",
-    "updated",
-    "modified",
-    "checksum",
-    "filter",
-    "persistent"
-  ],
-  "license": "MIT",
-  "dependencies": {
-    "plugin-error": "^1.0.1"
-  },
-  "devDependencies": {
-    "gulp": "^5.0.1",
-    "vinyl": "^3.0.1"
-  }
+    "name": "gulp-once",
+    "version": "2.2.0",
+    "description": "Only pass through files once until changed",
+    "keywords": [
+        "cache",
+        "cached",
+        "changed",
+        "checksum",
+        "filter",
+        "gulp",
+        "gulpplugin",
+        "modified",
+        "newer",
+        "passthrough",
+        "persistent",
+        "updated"
+    ],
+    "bugs": {
+        "url": "https://github.com/corneliusio/gulp-once/issues"
+    },
+    "license": "MIT",
+    "author": {
+        "name": "Cornelius Ukena",
+        "email": "guy@cornelius.io"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/corneliusio/gulp-once.git"
+    },
+    "files": [
+        "dist"
+    ],
+    "type": "module",
+    "sideEffects": false,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "typecheck": "tsc --noEmit",
+        "lint": "oxlint",
+        "format": "oxfmt",
+        "test": "node --test test/*.test.ts",
+        "prepublishOnly": "pnpm typecheck && pnpm lint && pnpm build"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "@types/vinyl": "^2.0.12",
+        "oxfmt": "^0.65.0",
+        "oxlint": "^1.80.0",
+        "typescript": "^7.0.2",
+        "vinyl": "^3.0.1"
+    },
+    "engines": {
+        "node": ">=22.12.0"
+    },
+    "packageManager": "pnpm@11.20.0"
 }

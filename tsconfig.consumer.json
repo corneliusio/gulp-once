@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "target": "es2024",
+        "lib": ["es2024"],
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "moduleDetection": "force",
+        "types": ["node"],
+        "noEmit": true,
+        "skipLibCheck": false
+    },
+    "include": ["test/fixtures/consumer.ts"]
+}

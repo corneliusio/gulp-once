@@ -1,42 +1,67 @@
 {
-  "name": "gulp-once",
-  "version": "2.1.1",
-  "description": "Only pass through files once until changed",
-  "repository": "corneliusio/gulp-once",
-  "bugs": {
-    "url": "https://github.com/corneliusio/gulp-once/issues"
-  },
-  "main": "index.js",
-  "engines": {
-    "node": ">=8.0.0"
-  },
-  "scripts": {
-    "test": "ava --verbose"
-  },
-  "author": {
-    "name": "Cornelius Ukena",
-    "email": "guy@cornelius.io"
-  },
-  "keywords": [
-    "gulp",
-    "gulpplugin",
-    "passthrough",
-    "cache",
-    "cached",
-    "changed",
-    "newer",
-    "updated",
-    "modified",
-    "checksum",
-    "filter",
-    "persistant"
-  ],
-  "license": "MIT",
-  "dependencies": {
-    "plugin-error": "^1.0.1"
-  },
-  "devDependencies": {
-    "ava": "^0.25.0",
-    "vinyl": "^2.1.0"
-  }
+    "name": "gulp-once",
+    "version": "3.0.0",
+    "description": "Only pass through files once until changed",
+    "keywords": [
+        "cache",
+        "cached",
+        "changed",
+        "checksum",
+        "filter",
+        "gulp",
+        "gulpplugin",
+        "modified",
+        "newer",
+        "passthrough",
+        "persistent",
+        "updated"
+    ],
+    "bugs": {
+        "url": "https://github.com/corneliusio/gulp-once/issues"
+    },
+    "license": "MIT",
+    "author": {
+        "name": "Cornelius Ukena",
+        "email": "guy@cornelius.io"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/corneliusio/gulp-once.git"
+    },
+    "files": [
+        "dist"
+    ],
+    "type": "module",
+    "sideEffects": false,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "typecheck": "tsc --noEmit",
+        "lint": "oxlint",
+        "format": "oxfmt",
+        "test": "node --test test/index.test.ts",
+        "prepack": "pnpm typecheck && pnpm lint && pnpm build && pnpm check:dist",
+        "check:dist": "tsc -p tsconfig.consumer.json"
+    },
+    "devDependencies": {
+        "@types/gulp": "^4.0.18",
+        "@types/node": "^22.0.0",
+        "@types/vinyl": "^2.0.12",
+        "gulp": "^5.0.1",
+        "oxfmt": "^0.65.0",
+        "oxlint": "^1.80.0",
+        "typescript": "^7.0.2",
+        "vinyl": "^3.0.1"
+    },
+    "engines": {
+        "node": ">=22.18.0"
+    },
+    "packageManager": "pnpm@11.20.0"
 }

@@ -8,7 +8,7 @@ Similar to plugins such as [gulp-cache](https://www.npmjs.com/package/gulp-cache
 
 ## Requirements
 
-- Node.js 22.18 or newer
+- Node.js 22.18 or newer (applies to gulp-once >=3.0.0; gulp-once 2.x still supports Node 8+)
 - Works from both ESM and CommonJS gulpfiles
 
 ## Install

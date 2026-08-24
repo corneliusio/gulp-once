@@ -19,13 +19,17 @@ $ npm install gulp-once --save-dev
 
 ## Usage
 
+<!-- prettier-ignore -->
 ```js
 import gulp from 'gulp'
 import once from 'gulp-once'
 import someExpensiveOperation from 'some-expensive-operation'
 
 export default () =>
-    gulp.src('src/**/*').pipe(once()).pipe(someExpensiveOperation()).pipe(gulp.dest('dest'))
+    gulp.src('src/**/*')
+        .pipe(once())
+        .pipe(someExpensiveOperation())
+        .pipe(gulp.dest('dest'))
 ```
 
 CommonJS gulpfiles work too:

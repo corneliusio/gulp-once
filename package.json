@@ -46,12 +46,15 @@
         "typecheck": "tsc --noEmit",
         "lint": "oxlint",
         "format": "oxfmt",
-        "test": "node --test test/*.test.ts",
-        "prepack": "pnpm typecheck && pnpm lint && pnpm build"
+        "test": "node --test test/index.test.ts",
+        "prepack": "pnpm typecheck && pnpm lint && pnpm build && pnpm check:dist",
+        "check:dist": "tsc -p tsconfig.consumer.json"
     },
     "devDependencies": {
+        "@types/gulp": "^4.0.18",
         "@types/node": "^22.0.0",
         "@types/vinyl": "^2.0.12",
+        "gulp": "^5.0.1",
         "oxfmt": "^0.65.0",
         "oxlint": "^1.80.0",
         "typescript": "^7.0.2",

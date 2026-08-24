@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { hash } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import type { Transform } from 'node:stream'
+import { PassThrough, type Transform } from 'node:stream'
+import { finished } from 'node:stream/promises'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
+import gulp from 'gulp'
 import File from 'vinyl'
 import once, { GulpOnceError } from '../src/index.ts'
 
@@ -324,5 +328,124 @@ test('stress test', async () => {
         Object.keys(readCache(checksums)).length,
         4000,
         'every checksum survived in the shared file',
+    )
+})
+
+test('loads an existing checksum file from disk', async () => {
+    const checksums = checksumFile('c-preexisting')
+    const key = ['path', 'to', 'file.txt'].join(path.sep)
+
+    // keys written with platform separators exercise the Windows key
+    // migration on Windows and a plain valid-cache read elsewhere
+    fs.writeFileSync(checksums, JSON.stringify({ [key]: SHA256_HELLO }))
+
+    const output = await run(once({ file: checksums }), [
+        makeFile('path/to/file.txt', 'Hello, world.'),
+    ])
+
+    assert.equal(output.length, 0, 'file matching the on-disk checksum is filtered')
+})
+
+test('persists checksums across separate processes', () => {
+    const fixture = fileURLToPath(new URL('./fixtures/pipe-file.ts', import.meta.url))
+    const checksums = checksumFile('c-subprocess')
+
+    const pipe = (contents: string) =>
+        execFileSync(process.execPath, [fixture, checksums, 'path/to/file.txt', contents], {
+            encoding: 'utf8',
+        })
+
+    assert.equal(pipe('Hello, world.'), '1', 'first run emits the file')
+    assert.equal(pipe('Hello, world.'), '0', 'second run reads the cache from disk and filters it')
+    assert.equal(pipe('Hello, universe.'), '1', 'changed contents pass through again')
+})
+
+test('filters files in a real gulp pipeline', async () => {
+    const checksums = checksumFile('c-gulp')
+    const srcdir = path.join(tmp, 'gulp-src')
+    const destdir = path.join(tmp, 'gulp-dest')
+
+    fs.mkdirSync(srcdir, { recursive: true })
+    fs.writeFileSync(path.join(srcdir, 'a.txt'), 'alpha')
+    fs.writeFileSync(path.join(srcdir, 'b.txt'), 'beta')
+
+    // globs always use forward slashes, including on Windows
+    const glob = `${srcdir.split(path.sep).join('/')}/*.txt`
+
+    const runPipeline = async () => {
+        let count = 0
+        const filter = once({ file: checksums, context: srcdir })
+
+        filter.on('data', () => count++)
+
+        await finished(gulp.src(glob).pipe(filter).pipe(gulp.dest(destdir)))
+
+        return count
+    }
+
+    assert.equal(await runPipeline(), 2, 'first run passes every file')
+    assert.equal(await runPipeline(), 0, 'second run filters everything')
+
+    fs.writeFileSync(path.join(srcdir, 'b.txt'), 'beta changed')
+
+    assert.equal(await runPipeline(), 1, 'only the changed file passes')
+    assert.ok(fs.existsSync(path.join(destdir, 'a.txt')), 'files reached gulp.dest')
+})
+
+test('rejects streamed file contents with a plugin error', async () => {
+    const stream = once({ file: false })
+    const file = new File({
+        path: path.resolve('path/to/file.txt'),
+        contents: new PassThrough(),
+    })
+
+    await assert.rejects(run(stream, [file]), (error: unknown) => {
+        assert.ok(error instanceof GulpOnceError)
+        assert.match(error.message, /Streams are not supported/)
+
+        return true
+    })
+})
+
+test('passes null-content files through untouched', async () => {
+    const checksums = checksumFile('c-null')
+    const file = new File({ path: path.resolve('path/to/file.txt'), contents: null })
+
+    const output = await run(once({ file: checksums }), [file])
+
+    assert.equal(output.length, 1)
+    assert.deepEqual(readCache(checksums), {}, 'nothing is recorded for null contents')
+})
+
+test('wraps namespace function errors in a plugin error', async () => {
+    const stream = once({
+        namespace: () => {
+            throw new Error('namespace exploded')
+        },
+        file: false,
+    })
+
+    await assert.rejects(
+        run(stream, [makeFile('path/to/file.txt', 'Hello, world.')]),
+        (error: unknown) => {
+            assert.ok(error instanceof GulpOnceError)
+            assert.match(error.message, /namespace exploded/)
+
+            return true
+        },
+    )
+})
+
+test('emits a plugin error when the checksum file cannot be written', async () => {
+    const checksums = path.join(tmp, 'no-such-dir', 'checksums')
+    const stream = once({ file: checksums })
+
+    await assert.rejects(
+        run(stream, [makeFile('path/to/file.txt', 'Hello, world.')]),
+        (error: unknown) => {
+            assert.ok(error instanceof GulpOnceError)
+
+            return true
+        },
     )
 })

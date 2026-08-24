@@ -29,5 +29,7 @@ jobs:
             - run: pnpm exec oxfmt --check
             - run: pnpm test
             - run: pnpm build
+            # the emitted declarations must be consumable by a TypeScript consumer
+            - run: pnpm check:dist
             # the ESM build must stay require()-able from CommonJS gulpfiles
             - run: node -e "const assert = require('node:assert'); assert.equal(typeof require('./dist/index.js'), 'function'); assert.equal(typeof require('./dist/index.js').GulpOnceError, 'function')"

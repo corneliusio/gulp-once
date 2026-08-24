@@ -17,5 +17,6 @@
         "noImplicitOverride": true,
         "skipLibCheck": true
     },
-    "include": ["src", "test", "oxfmt.config.ts", "oxlint.config.ts"]
+    "include": ["src", "test", "oxfmt.config.ts", "oxlint.config.ts"],
+    "exclude": ["test/fixtures/consumer.ts"]
 }

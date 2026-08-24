@@ -30,4 +30,4 @@ jobs:
             - run: pnpm test
             - run: pnpm build
             # the ESM build must stay require()-able from CommonJS gulpfiles
-            - run: node -e "const assert = require('node:assert'); assert.equal(typeof require('./dist/index.js'), 'function')"
+            - run: node -e "const assert = require('node:assert'); assert.equal(typeof require('./dist/index.js'), 'function'); assert.equal(typeof require('./dist/index.js').GulpOnceError, 'function')"

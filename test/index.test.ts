@@ -250,24 +250,79 @@ test('instances do not share state', async () => {
     assert.equal(outputB.length, 1, 'second cache has never seen the file')
 })
 
+test('instances sharing a checksum file merge their writes', async () => {
+    const checksums = checksumFile('c-shared')
+
+    const styles = once({ namespace: 'styles', file: checksums })
+    const scripts = once({ namespace: 'scripts', file: checksums })
+
+    await Promise.all([
+        run(styles, [makeFile('path/to/style.css', 'a { color: red; }')]),
+        run(scripts, [makeFile('path/to/script.js', 'console.log(1);')]),
+    ])
+
+    const content = readCache(checksums)
+
+    assert.ok(Object.hasOwn(content, 'styles'), 'first namespace persisted')
+    assert.ok(Object.hasOwn(content, 'scripts'), 'second namespace persisted')
+})
+
+test('a namespace and filename sharing a key do not destroy each other', async () => {
+    const checksums = checksumFile('c-collision')
+
+    // the namespace claims the root key "shared"; a file whose cache key is
+    // also "shared" passes through untracked instead of clobbering the bucket
+    const stream = once({ file: checksums, context: false })
+    const namespaced = once({ namespace: 'shared', file: checksums })
+
+    await run(namespaced, [makeFile('path/to/file.txt', 'Hello, world.')])
+    await run(stream, [makeFile('path/to/shared', 'Hello, world.')])
+    await run(once({ file: checksums, context: false }), [
+        makeFile('path/to/shared', 'Hello, world.'),
+    ])
+
+    const content = readCache(checksums)
+
+    assert.deepEqual(
+        content.shared,
+        { 'path/to/file.txt': SHA256_HELLO },
+        'namespace bucket survived',
+    )
+})
+
+test('exposes GulpOnceError on the exported function for CommonJS consumers', () => {
+    assert.equal(once.GulpOnceError, GulpOnceError)
+})
+
 test('stress test', async () => {
     const checksums = checksumFile('c8')
-    const streams: Promise<File[]>[] = []
+    const streams: ReturnType<typeof once>[] = []
+    const pending: Promise<File[]>[] = []
 
+    // construct every stream up front so they all share one cache file
     for (let is = 0; is < 20; is++) {
-        const stream = once({ file: checksums })
+        streams.push(once({ file: checksums }))
+    }
+
+    streams.forEach((stream, is) => {
         const files: File[] = []
 
         for (let i = 0; i < 200; i++) {
             files.push(makeFile(`path/to/file-${is}-${i}.txt`, 'Hello, world.'))
         }
 
-        streams.push(run(stream, files))
-    }
+        pending.push(run(stream, files))
+    })
 
-    const results = await Promise.all(streams)
+    const results = await Promise.all(pending)
 
     for (const output of results) {
         assert.equal(output.length, 200)
     }
+
+    assert.equal(
+        Object.keys(readCache(checksums)).length,
+        4000,
+        'every checksum survived in the shared file',
+    )
 })

@@ -18,7 +18,10 @@ export declare class GulpOnceError extends Error {
     readonly plugin = "gulp-once";
     constructor(message: string, options?: ErrorOptions);
 }
-declare const once: (options?: OnceOptions | Namespace) => Transform;
+declare const create: (options?: OnceOptions | Namespace) => Transform;
+declare const once: typeof create & {
+    GulpOnceError: typeof GulpOnceError;
+};
 export default once;
 export { once as 'module.exports' };
 //# sourceMappingURL=index.d.ts.map

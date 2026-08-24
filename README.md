@@ -8,7 +8,7 @@ Similar to plugins such as [gulp-cache](https://www.npmjs.com/package/gulp-cache
 
 ## Requirements
 
-- Node.js 22.12 or newer
+- Node.js 22.18 or newer
 - Works from both ESM and CommonJS gulpfiles
 
 ## Install
@@ -86,7 +86,7 @@ _[int]_: If you're a stickler for spacing on your files, you can set the indenta
 
 ## Migrating from v2
 
-- **Node 22.12+ is required.** The package is now ESM with TypeScript types included; `require('gulp-once')` continues to work on supported Node versions.
+- **Node 22.18+ is required.** The package is now ESM with TypeScript types included; `require('gulp-once')` continues to work on supported Node versions. The bundled type declarations require TypeScript 5.6 or newer.
 - **The default hash algorithm changed from `sha1` to `sha256`**, so every file will pass through once more after upgrading while the checksum file regenerates. Set `algorithm: 'sha1'` to keep existing checksum files valid.
-- **Errors are now instances of the exported `GulpOnceError`** (with a `plugin: 'gulp-once'` property) instead of `plugin-error`. The plugin has no runtime dependencies.
-- Dynamic namespace functions are now called for every file (previously only the first file in a stream, which was a bug).
+- **Errors are now instances of `GulpOnceError`** (with a `plugin: 'gulp-once'` property) instead of `plugin-error`. The class is a named export and is also available as `once.GulpOnceError` from CommonJS. The plugin has no runtime dependencies.
+- Upgrading from v2.1.x or earlier? v2.2.0 already fixed dynamic namespace functions (now called for every file), binary file hashing, and cross-instance cache isolation - see its release notes.

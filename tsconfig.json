@@ -2,7 +2,7 @@
     "compilerOptions": {
         "strict": true,
         "target": "es2024",
-        "lib": ["esnext"],
+        "lib": ["es2024"],
         "module": "nodenext",
         "moduleResolution": "nodenext",
         "moduleDetection": "force",

@@ -1,6 +1,6 @@
 # gulp-once
 
-[![NPM Version](https://img.shields.io/npm/v/gulp-once.svg?style=flat-square)](http://npmjs.com/package/gulp-once) [![Build Status](https://img.shields.io/travis/corneliusio/gulp-once/master.svg?style=flat-square)](https://travis-ci.org/corneliusio/gulp-once)
+[![NPM Version](https://img.shields.io/npm/v/gulp-once.svg?style=flat-square)](http://npmjs.com/package/gulp-once) [![Build Status](https://img.shields.io/github/actions/workflow/status/corneliusio/gulp-once/test.yml?style=flat-square)](https://github.com/corneliusio/gulp-once/actions/workflows/test.yml)
 
 Only pass through files once unless changed
 
@@ -23,7 +23,7 @@ var gulp = require('gulp'),
 gulp.task('default', function() {
 
     gulp.src('src/**/*')
-        .pipe(once()),
+        .pipe(once())
         .pipe(someExpensiveOperation())
         .pipe(gulp.dest('dest'));
 });
@@ -40,7 +40,7 @@ gulp.task('default', function() {
             algorithm: 'sha1',
             file: '.checksums',
             fileIndent: 4
-        })),
+        }))
         .pipe(someExpensiveOperation())
         .pipe(gulp.dest('dest'));
 ```
@@ -50,7 +50,7 @@ gulp.task('default', function() {
 
 ```js
     gulp.src('src/img/*')
-        .pipe(once('images')),
+        .pipe(once('images'))
         .pipe(someExpensiveOperation())
         .pipe(gulp.dest('dest/img'));
 ```
@@ -63,7 +63,7 @@ If you do not pass an object as an option to `once()`, it will be passed to this
 
 ```js
     gulp.src('src/img/*')
-        .pipe(once('images')),
+        .pipe(once('images'))
         .pipe(someExpensiveOperation())
         .pipe(gulp.dest('dest/img'));
 ```
@@ -72,11 +72,11 @@ If you do not pass an object as an option to `once()`, it will be passed to this
 *[string]*: Whatever you would want passed to [`crypto.createHash()`](https://nodejs.org/api/crypto.html#crypto_crypto_createhash_algorithm) Default: `'sha1'`
 
 #### `options.file`
-*[string|boolean]*: Path to file to persist data as JSON between Gulp runs. Is useful for retaining file details if Gulp exits unexpectedly and you have to restart, if you run tasks manually (i.e. You don't `gulp.watch()` files), or to just not run unnecessary actions between work sessions. Also allows you to easily "cache bust" for specific files easily if you are so inclined. Can be set to `false` to store data in memory, this effectively turns off persistance as a file will not be created/updated with any file changes. Default: `'.checksums'`
+*[string|boolean]*: Path to file to persist data as JSON between Gulp runs. Is useful for retaining file details if Gulp exits unexpectedly and you have to restart, if you run tasks manually (i.e. You don't `gulp.watch()` files), or to just not run unnecessary actions between work sessions. Also allows you to easily "cache bust" for specific files easily if you are so inclined. Can be set to `false` to store data in memory, this effectively turns off persistence as a file will not be created/updated with any file changes. Default: `'.checksums'`
 
 ```js
     gulp.src('src/img/*')
-        .pipe(once({file: 'path/to/file.json'})),
+        .pipe(once({file: 'path/to/file.json'}))
         .pipe(someExpensiveOperation())
         .pipe(gulp.dest('dest/img'));
 ```
